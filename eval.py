@@ -11,12 +11,8 @@ from imgaug import augmenters as iaa
 from tqdm import tqdm
 import pandas as pd 
 import glob
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-DATA_DIR = 'kaggle/input'
 
-# Directory to save logs and trained model
+DATA_DIR = 'kaggle/input'
 ROOT_DIR = 'kaggle/working'
 
 # Import Mask RCNN
@@ -58,10 +54,10 @@ class DetectorConfig(Config):
     BACKBONE = 'resnet50'
     
     NUM_CLASSES = 2  # background + 1 pneumonia classes
-    
+
+    '''
     IMAGE_MIN_DIM = 256
     IMAGE_MAX_DIM = 256
-    '''
     RPN_ANCHOR_SCALES = (32, 64, 128, 256)
     TRAIN_ROIS_PER_IMAGE = 32
     MAX_GT_INSTANCES = 3
@@ -73,7 +69,6 @@ class DetectorConfig(Config):
     '''
     
 config = DetectorConfig()
-config.display()
 
 class DetectorDataset(utils.Dataset):
     """Dataset class for training pneumonia detection on the RSNA pneumonia dataset.
@@ -128,7 +123,6 @@ class DetectorDataset(utils.Dataset):
         return mask.astype(np.bool), class_ids.astype(np.int32)
 
 anns = pd.read_csv(os.path.join(DATA_DIR, 'stage_1_train_labels.csv'))
-anns.head()
 
 image_fps, image_annotations = parse_dataset(train_dicom_dir, anns=anns)
 
@@ -157,70 +151,12 @@ image_fps_val = image_fps_list[split_index:]
 
 print(len(image_fps_train), len(image_fps_val))
 
-# prepare the training dataset
-dataset_train = DetectorDataset(image_fps_train, image_annotations, ORIG_SIZE, ORIG_SIZE)
-dataset_train.prepare()
-
-# Show annotation(s) for a DICOM image 
-test_fp = random.choice(image_fps_train)
-image_annotations[test_fp]
-
 # prepare the validation dataset
 dataset_val = DetectorDataset(image_fps_val, image_annotations, ORIG_SIZE, ORIG_SIZE)
 dataset_val.prepare()
 
-# Load and display random samples and their bounding boxes
-# Suggestion: Run this a few times to see different examples. 
-
-image_id = random.choice(dataset_train.image_ids)
-image_fp = dataset_train.image_reference(image_id)
-image = dataset_train.load_image(image_id)
-mask, class_ids = dataset_train.load_mask(image_id)
-
-print(image.shape)
-
-plt.figure(figsize=(10, 10))
-plt.subplot(1, 2, 1)
-plt.imshow(image[:, :, 0], cmap='gray')
-plt.axis('off')
-
-plt.subplot(1, 2, 2)
-masked = np.zeros(image.shape[:2])
-for i in range(mask.shape[2]):
-    masked += image[:, :, 0] * mask[:, :, i]
-plt.imshow(masked, cmap='gray')
-plt.axis('off')
-
-print(image_fp)
-print(class_ids)
-
-model = modellib.MaskRCNN(mode='training', config=config, model_dir=ROOT_DIR)
-
-# Image augmentation 
-augmentation = iaa.SomeOf((0, 1), [
-    iaa.Fliplr(0.5),
-    iaa.Affine(
-        scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
-        translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
-        rotate=(-25, 25),
-        shear=(-8, 8)
-    ),
-    iaa.Multiply((0.9, 1.1))
-])
-
-NUM_EPOCHS = 1
-
-# Train Mask-RCNN Model 
-import warnings 
-warnings.filterwarnings("ignore")
-model.train(dataset_train, dataset_val, 
-            learning_rate=config.LEARNING_RATE, 
-            epochs=NUM_EPOCHS, 
-            layers='all',
-            augmentation=augmentation)
-
 # select trained model 
-dir_names = next(os.walk(model.model_dir))[1]
+dir_names = next(os.walk(ROOT_DIR))[1]
 key = config.NAME.lower()
 dir_names = filter(lambda f: f.startswith(key), dir_names)
 dir_names = sorted(dir_names)
@@ -230,11 +166,11 @@ if not dir_names:
     raise FileNotFoundError(
         errno.ENOENT,
         "Could not find model directory under {}".format(self.model_dir))
-    
+
 fps = []
 # Pick last directory
 for d in dir_names: 
-    dir_name = os.path.join(model.model_dir, d)
+    dir_name = os.path.join(ROOT_DIR, d)
     # Find the last checkpoint
     checkpoints = next(os.walk(dir_name))[2]
     checkpoints = filter(lambda f: f.startswith("mask_rcnn"), checkpoints)
@@ -305,8 +241,8 @@ test_image_fps = get_dicom_fps(test_dicom_dir)
 def predict(image_fps, filepath='submission.csv', min_conf=0.95): 
     
     # assume square image
-    resize_factor = ORIG_SIZE / config.IMAGE_SHAPE[0]
-    #resize_factor = ORIG_SIZE 
+    #resize_factor = ORIG_SIZE / config.IMAGE_SHAPE[0]
+    resize_factor = ORIG_SIZE 
     with open(filepath, 'w') as file:
       for image_id in tqdm(image_fps): 
         ds = pydicom.read_file(image_id)
@@ -358,46 +294,3 @@ def predict(image_fps, filepath='submission.csv', min_conf=0.95):
 submission_fp = os.path.join(ROOT_DIR, 'submission.csv')
 print(submission_fp)
 predict(test_image_fps, filepath=submission_fp)
-
-output = pd.read_csv(submission_fp, names=['patientId', 'PredictionString'])
-output.head(100)
-
-def visualize(): 
-    image_id = random.choice(test_image_fps)
-    ds = pydicom.read_file(image_id)
-    
-    # original image 
-    image = ds.pixel_array
-    
-    # assume square image 
-    resize_factor = ORIG_SIZE / config.IMAGE_SHAPE[0]
-    
-    # If grayscale. Convert to RGB for consistency.
-    if len(image.shape) != 3 or image.shape[2] != 3:
-        image = np.stack((image,) * 3, -1) 
-    resized_image, window, scale, padding, crop = utils.resize_image(
-        image,
-        min_dim=config.IMAGE_MIN_DIM,
-        min_scale=config.IMAGE_MIN_SCALE,
-        max_dim=config.IMAGE_MAX_DIM,
-        mode=config.IMAGE_RESIZE_MODE)
-
-    patient_id = os.path.splitext(os.path.basename(image_id))[0]
-    print(patient_id)
-
-    results = model.detect([resized_image])
-    r = results[0]
-    for bbox in r['rois']: 
-        print(bbox)
-        x1 = int(bbox[1] * resize_factor)
-        y1 = int(bbox[0] * resize_factor)
-        x2 = int(bbox[3] * resize_factor)
-        y2 = int(bbox[2]  * resize_factor)
-        cv2.rectangle(image, (x1,y1), (x2,y2), (77, 255, 9), 3, 1)
-        width = x2 - x1 
-        height = y2 - y1 
-        print("x {} y {} h {} w {}".format(x1, y1, width, height))
-    plt.figure() 
-    plt.imshow(image, cmap=plt.cm.gist_gray)
-
-visualize()
