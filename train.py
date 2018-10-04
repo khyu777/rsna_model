@@ -57,7 +57,7 @@ class DetectorConfig(Config):
     # Train on 1 GPU and 8 images per GPU. We can put multiple images on each
     # GPU because the images are small. Batch size is 8 (GPUs * images/GPU).
     GPU_COUNT = 1
-    IMAGES_PER_GPU = 2 
+    IMAGES_PER_GPU = 4 
     
     BACKBONE = 'resnet50'
     
@@ -142,7 +142,7 @@ ORIG_SIZE = 1024
 ######################################################################
 # Modify this line to use more or fewer images for training/validation. 
 # To use all images, do: image_fps_list = list(image_fps)
-image_fps_list = list(image_fps[:500]) 
+image_fps_list = list(image_fps[:1000]) 
 #####################################################################
 
 # split dataset into training vs. validation dataset 
@@ -196,27 +196,28 @@ plt.axis('off')
 print(image_fp)
 print(class_ids)
 
-model = modellib.MaskRCNN(mode='training', config=config, model_dir=ROOT_DIR)
+if __name__ == '__main__':
+    model = modellib.MaskRCNN(mode='training', config=config, model_dir=ROOT_DIR)
 
-# Image augmentation 
-augmentation = iaa.SomeOf((0, 1), [
-    iaa.Fliplr(0.5),
-    iaa.Affine(
-        scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
-        translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
-        rotate=(-25, 25),
-        shear=(-8, 8)
-    ),
-    iaa.Multiply((0.9, 1.1))
-])
+    # Image augmentation 
+    augmentation = iaa.SomeOf((0, 1), [
+        iaa.Fliplr(0.5),
+        iaa.Affine(
+            scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+            translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+            rotate=(-25, 25),
+            shear=(-8, 8)
+        ),
+        iaa.Multiply((0.9, 1.1))
+    ])
 
-NUM_EPOCHS = 1
+    NUM_EPOCHS = 1
 
-# Train Mask-RCNN Model 
-import warnings 
-warnings.filterwarnings("ignore")
-model.train(dataset_train, dataset_val, 
-            learning_rate=config.LEARNING_RATE, 
-            epochs=NUM_EPOCHS, 
-            layers='all',
-            augmentation=augmentation)
+    # Train Mask-RCNN Model 
+    import warnings 
+    warnings.filterwarnings("ignore")
+    model.train(dataset_train, dataset_val, 
+                learning_rate=config.LEARNING_RATE, 
+                epochs=NUM_EPOCHS, 
+                layers='all',
+                augmentation=augmentation)
