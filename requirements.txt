@@ -10,3 +10,6 @@ pylint
 scikit-image
 scipy
 tensorflow-gpu
+pandas
+tqdm
+pydicom
