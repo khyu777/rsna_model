@@ -1,0 +1,12 @@
+Cython
+h5py
+imgaug
+Keras
+matplotlib
+numpy
+opencv-python
+Pillow
+pylint
+scikit-image
+scipy
+tensorflow-gpu
