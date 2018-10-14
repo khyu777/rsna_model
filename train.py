@@ -68,7 +68,7 @@ if __name__ == '__main__':
     print('Train all layers')
     lr = config.LEARNING_RATE
     for i, epoch in enumerate(args.all_epochs):
-        print('Stage %d' % i+1)
+        print('Stage %d' % (i+1))
         lr /= 5
         print('Learning rate %f' % lr)
         model.train(dataset_train, dataset_val,
