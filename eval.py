@@ -3,6 +3,7 @@ import os
 import glob
 import pydicom
 import numpy as np
+import random
 import pandas as pd
 import mrcnn.model as modellib
 import visualization_utils as visutil
@@ -33,16 +34,15 @@ def read_label_file(label_file):
             parsed[pid]['boxes'].append(extract_box(row))
 
     for _, val in parsed.items():
-        if val['boxes']:
-            val['boxes'] = np.stack(val['boxes'])
+        val['boxes'] = np.array(val['boxes'])
     return parsed
 
 
 # Make predictions on test images, write out sample submission
 def predict(image_fps, config, min_conf, submission_file=None, label_file=None, eval_dir=None):
-    # labels = None
-    # if label_file:
-    #     labels = read_label_file(label_file)
+    labels = None
+    if label_file:
+        labels = read_label_file(label_file)
     submit_dict = None
     if submission_file:
         submit_dict = {'patientId': [], 'PredictionString': []}
@@ -88,7 +88,7 @@ def predict(image_fps, config, min_conf, submission_file=None, label_file=None, 
         if len(r['rois']) != 0:
             visutil.visualize_boxes_and_labels_on_image_array(
                 original_image,
-                np.stack(r['rois']) * resize_factor,
+                np.array(r['rois']) * resize_factor,
                 r['class_ids'],
                 r['scores'],
                 {1: {'id': 1, 'name': 'pneumonia'}},
@@ -98,6 +98,16 @@ def predict(image_fps, config, min_conf, submission_file=None, label_file=None, 
             )
 
         # draw ground truth boxes
+        if labels:
+            visutil.visualize_boxes_and_labels_on_image_array(
+                original_image,
+                labels[patient_id]['boxes'],
+                [labels[patient_id]['label']] * len(labels[patient_id]['boxes']),
+                None,
+                {1: {'id': 1, 'name': 'pneumonia'}},
+                use_normalized_coordinates=False,
+            )
+
         im = Image.fromarray(original_image)
         im.save(os.path.join(eval_dir, patient_id + '.jpg'))
 
@@ -139,6 +149,11 @@ if __name__ == '__main__':
 
     # Get filenames of test dataset DICOM images
     test_image_fps = glob.glob(os.path.join(args.dicom_dir, '*.dcm'))
+
+    # if more than 5000, just pick 5000 at random
+    sorted(test_image_fps)
+    random.shuffle(test_image_fps)
+    test_image_fps = test_image_fps[:5000]
 
     predict(
         test_image_fps,
