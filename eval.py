@@ -1,23 +1,13 @@
 import argparse
 import os
+import glob
+import pydicom
+import numpy as np
 import mrcnn.model as modellib
 
 from mrcnn import utils
 from config import from_config_file
-
-import sys
-import random
-import math
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
-import json
-import pydicom
-from imgaug import augmenters as iaa
 from tqdm import tqdm
-import pandas as pd
-import glob
-import train as tr
 
 
 # Make predictions on test images, write out sample submission
