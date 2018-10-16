@@ -85,7 +85,7 @@ def predict(image_fps, config, min_conf, submission_file=None, label_file=None, 
             submit_dict['PredictionString'].append(' '.join(boxes))
 
         # draw predicted boxes
-        if r['rois']:
+        if len(r['rois']) != 0:
             visutil.visualize_boxes_and_labels_on_image_array(
                 original_image,
                 np.stack(r['rois']) * resize_factor,
@@ -124,6 +124,7 @@ if __name__ == '__main__':
     config = from_config_file(args.config)
     config.GPU_COUNT = 1
     config.IMAGES_PER_GPU = 1
+    config.DETECTION_MAX_INSTANCES = 10
     config.__init__()
 
     # Recreate the model in inference mode
