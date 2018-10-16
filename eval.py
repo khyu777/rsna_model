@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('threshold', help='min threshold for detected boxes', type=float)
     parser.add_argument('dicom_dir', help='path to directory with eval dicom files')
     parser.add_argument('model', help='path to the pretrained model')
-    parser.add_argument('--eval-dir', help='path to directory with evaluated images', default='/tmp')
+    parser.add_argument('eval_dir', help='path to directory with evaluated images')
     parser.add_argument('--label-file', help='path to label file')
     parser.add_argument('--submission-file', help='path to output submission file')
     args = parser.parse_args()
