@@ -124,6 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('eval_dir', help='path to directory with evaluated images')
     parser.add_argument('--label-file', help='path to label file')
     parser.add_argument('--submission-file', help='path to output submission file')
+    parser.add_argument('--pick-500', help='pick 500 random images', action='store_true')
     args = parser.parse_args()
 
     # create the eval dir
@@ -150,10 +151,10 @@ if __name__ == '__main__':
     # Get filenames of test dataset DICOM images
     test_image_fps = glob.glob(os.path.join(args.dicom_dir, '*.dcm'))
 
-    # if more than 5000, just pick 5000 at random
-    sorted(test_image_fps)
-    random.shuffle(test_image_fps)
-    test_image_fps = test_image_fps[:5000]
+    if args.pick_500:
+        sorted(test_image_fps)
+        random.shuffle(test_image_fps)
+        test_image_fps = test_image_fps[:500]
 
     predict(
         test_image_fps,
