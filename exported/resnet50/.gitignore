@@ -1,3 +1,4 @@
 mask_rcnn_pneumonia_0014.h5
 tested_images
 mask-rcnn-resnet50-submission.csv
+eval_images

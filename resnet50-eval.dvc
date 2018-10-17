@@ -1,0 +1,13 @@
+cmd: python eval.py exported/resnet50/config.ini 0.01 /home/keunwoo/Projects/pneumonia-detection/data/stage_1_train_images
+  exported/resnet50/mask_rcnn_pneumonia_0014.h5 exported/resnet50/eval_images --label-file
+  /home/keunwoo/Projects/pneumonia-detection/data/stage_1_train_labels.csv --pick-500
+deps:
+- md5: 936b9b2d13598676a67f620f60ce33d7
+  path: exported/resnet50/config.ini
+- md5: 7b4ab1b4bd72fb1bef915dd8da38de0b
+  path: exported/resnet50/mask_rcnn_pneumonia_0014.h5
+md5: d155e3d45743a263bf540d9f3c636ef3
+outs:
+- cache: true
+  md5: c78bb7ab84638ba4ece0381782ce118f.dir
+  path: exported/resnet50/eval_images
