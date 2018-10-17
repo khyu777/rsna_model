@@ -1,0 +1,5 @@
+md5: ca3be64eb22b9d226f1c4e6d422597e3
+outs:
+- cache: true
+  md5: e94197c0eae7d520340125237f86eb09
+  path: mask_rcnn_pneumonia_0002.h5
