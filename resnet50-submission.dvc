@@ -1,4 +1,4 @@
-cmd: python eval.py exported/resnet50/config.ini 0.95 /home/keunwoo/Projects/pneumonia-detection/data/stage_1_test_images
+cmd: python eval.py exported/resnet50/config.ini 0.95 /home/keunwoo/Projects/pneumonia-detection/data/stage_2_test_images
   exported/resnet50/mask_rcnn_pneumonia_0014.h5 exported/resnet50/tested_images --submission-file
   exported/resnet50/mask-rcnn-resnet50-submission.csv
 deps:
@@ -6,11 +6,11 @@ deps:
   path: exported/resnet50/config.ini
 - md5: 7b4ab1b4bd72fb1bef915dd8da38de0b
   path: exported/resnet50/mask_rcnn_pneumonia_0014.h5
-md5: 53d60769c4b9aeafc712a3808c14f847
+md5: da9b7927519184e3979eeaa70c548660
 outs:
 - cache: true
-  md5: eda8f14a68b5f88e49ea2bd60e39c5b3.dir
+  md5: f96ad1596f2fdaec5880c6a87e316a27.dir
   path: exported/resnet50/tested_images
 - cache: true
-  md5: facb49864dea6465259c4d80713891d5
+  md5: 207b17a1fa575e7e6102094029aacd7e
   path: exported/resnet50/mask-rcnn-resnet50-submission.csv
